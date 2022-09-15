@@ -28,29 +28,29 @@ const registerUser = AsyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email: email });
 
- if (user) {
+  if (user) {
     res.status(400);
-    throw new Error("User exists")
- }
+    throw new Error("User exists");
+  }
 
- const newUser = await User.create({
+  const newUser = await User.create({
     name,
     email,
-    password
- })
+    password,
+  });
 
- if (newUser) {
+  if (newUser) {
     res.status(201).json({
-        _id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        isAdmin: newUser.isAdmin,
-        token: generateToken(newUser._id),
-    })
- }else {
-    res.status(400)
-    throw new Error('Invalid userData')
- }
+      _id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      isAdmin: newUser.isAdmin,
+      token: generateToken(newUser._id),
+    });
+  } else {
+    res.status(400);
+    throw new Error("Invalid userData");
+  }
 
   res.send({ email, password });
 });
@@ -71,4 +71,29 @@ const getUserProfile = AsyncHandler(async (req, res) => {
   }
 });
 
-export { authUser, getUserProfile, registerUser };
+
+const updateUserProfile = AsyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id)
+  
+    if (user) {
+      user.name = req.body.name || user.name
+      user.email = req.body.email || user.email
+      if (req.body.password) {
+        user.password = req.body.password
+      }
+  
+      const updatedUser = await user.save()
+  
+      res.json({
+        name: updatedUser.name,
+        email: updatedUser.email,
+        isAdmin: updatedUser.isAdmin,
+        token: generateToken(updatedUser._id),
+      })
+    } else {
+      res.status(404)
+      throw new Error('User not found')
+    }
+  })
+
+export { authUser, getUserProfile, registerUser, updateUserProfile };
